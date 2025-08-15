@@ -1,17 +1,20 @@
-version: '3'
-
 services:
-  n8n:
-    image: n8nio/n8n
-    ports:
-      - '10000:5678' # Map port 10000 (Render) -> 5678 (n8n internal)
-    environment:
-      - NODE_TLS_REJECT_UNAUTHORIZED=0
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=supersecret
-      - TZ=Asia/Ho_Chi_Minh
-      - N8N_PORT=5678
-      - N8N_HOST=0.0.0.0
-    volumes:
-      - ./n8n_data:/home/node/.n8n
+  - type: web
+    name: n8n
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: N8N_PORT
+        value: ${PORT}
+      - key: N8N_WEBHOOK_URL
+        value: https://n8n.onrender.com   # Domain HTTPS Render
+      - key: N8N_BASIC_AUTH_ACTIVE
+        value: true
+      - key: N8N_BASIC_AUTH_USER
+        value: admin
+      - key: N8N_BASIC_AUTH_PASSWORD
+        value: supersecret
+      - key: NODE_TLS_REJECT_UNAUTHORIZED
+        value: '0'
+      - key: TZ
+        value: Asia/Ho_Chi_Minh
