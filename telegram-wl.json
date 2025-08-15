@@ -1,0 +1,75 @@
+{
+  "name": "AI Tech News Agent (Ollama)",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerTimes": [{ "item": "0 8 * * *" }]
+      },
+      "name": "Cron",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/feed/"
+      },
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "return items.slice(0,3);"
+      },
+      "name": "Take First 3 Articles",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:11434/api/generate",
+        "options": {},
+        "responseFormat": "json",
+        "jsonParameters": true,
+        "body": "{\n  \"model\": \"llama3.1\",\n  \"prompt\": \"Tóm tắt các tin công nghệ sau bằng tiếng Việt, mỗi tin 2 câu:\\n\" + items.map(i => i.json.title + ' - ' + i.json.link).join('\\n'),\n  \"stream\": false\n}"
+      },
+      "name": "Ollama Summarize",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "={{ $json.response }}",
+        "additionalFields": {}
+      },
+      "name": "Telegram Send",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [1050, 300],
+      "credentials": {
+        "telegramApi": "Your Telegram Credential"
+      }
+    }
+  ],
+  "connections": {
+    "Cron": {
+      "main": [[{ "node": "RSS Feed Read", "type": "main", "index": 0 }]]
+    },
+    "RSS Feed Read": {
+      "main": [
+        [{ "node": "Take First 3 Articles", "type": "main", "index": 0 }]
+      ]
+    },
+    "Take First 3 Articles": {
+      "main": [[{ "node": "Ollama Summarize", "type": "main", "index": 0 }]]
+    },
+    "Ollama Summarize": {
+      "main": [[{ "node": "Telegram Send", "type": "main", "index": 0 }]]
+    }
+  }
+}
